@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>LIFF測試</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+
+<h2>LIFF測試</h2>
+<div id="result">開始</div>
+
+<script>
+window.onload = async function() {
+
+  const result = document.getElementById("result");
+
+  result.innerHTML = "SDK：" + typeof liff;
+
+  try {
+
+    result.innerHTML += "<br>準備初始化";
+
+    await liff.init({
+      liffId: "2010485669-4ZPXDW17"
+    });
+
+    result.innerHTML += "<br>初始化成功";
+
+  } catch(err) {
+
+    result.innerHTML +=
+      "<br>錯誤：" +
+      err.message;
+
+  }
+
+};
+</script>
+
+</body>
+</html>
