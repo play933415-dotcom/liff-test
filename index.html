@@ -2,40 +2,137 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>LIFF測試</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第三次段考週通知單</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, "Microsoft JhengHei", sans-serif;
+      padding: 14px;
+      background: #f7f7f7;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    .notice {
+      width: 100%;
+      max-width: 900px;
+      display: block;
+      margin: 0 auto 20px auto;
+      border: 1px solid #ccc;
+      background: white;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid #ddd;
+    }
+
+    label {
+      display: block;
+      font-size: 18px;
+      margin: 10px 0;
+    }
+
+    button {
+      width: 100%;
+      padding: 16px;
+      font-size: 20px;
+      border: none;
+      border-radius: 10px;
+      background: #06c755;
+      color: white;
+      font-weight: bold;
+    }
+
+    #result {
+      margin-top: 15px;
+      font-size: 16px;
+      color: #333;
+    }
+  </style>
 </head>
+
 <body>
 
-<h2>LIFF測試</h2>
-<div id="result">開始</div>
+<h2>第三次段考週通知單</h2>
+
+<img class="notice" src="課表.PNG">
+
+<div class="card">
+  <h3>6/24（三）英文加強</h3>
+  <label><input type="radio" name="eng" value="參加"> 我願意參加</label>
+  <label><input type="radio" name="eng" value="不參加"> 我不參加</label>
+
+  <h3>6/24（三）訂餐</h3>
+  <label><input type="radio" name="engMeal" value="訂餐"> 訂餐</label>
+  <label><input type="radio" name="engMeal" value="不訂餐"> 不訂餐</label>
+</div>
+
+<div class="card">
+  <h3>6/25（四）生物加強</h3>
+  <label><input type="radio" name="bio" value="參加"> 我願意參加</label>
+  <label><input type="radio" name="bio" value="不參加"> 我不參加</label>
+
+  <h3>6/25（四）社會講座</h3>
+  <label><input type="radio" name="social" value="參加"> 我願意參加</label>
+  <label><input type="radio" name="social" value="不參加"> 我不參加</label>
+
+  <h3>6/25（四）訂餐</h3>
+  <label><input type="radio" name="bioMeal" value="訂餐"> 訂餐</label>
+  <label><input type="radio" name="bioMeal" value="不訂餐"> 不訂餐</label>
+</div>
+
+<button onclick="sendForm()">送出回覆</button>
+
+<div id="result">LIFF準備中...</div>
 
 <script>
-window.onload = async function() {
+const LIFF_ID = "2010485669-4ZPXDW17";
 
+window.onload = async function() {
   const result = document.getElementById("result");
 
-  result.innerHTML = "SDK：" + typeof liff;
-
   try {
+    await liff.init({ liffId: LIFF_ID });
+    result.innerHTML = "LIFF初始化成功";
+  } catch (err) {
+    result.innerHTML = "LIFF錯誤：" + err.message;
+  }
+};
 
-    result.innerHTML += "<br>準備初始化";
+function getValue(name) {
+  const checked = document.querySelector('input[name="' + name + '"]:checked');
+  return checked ? checked.value : "";
+}
 
-    await liff.init({
-      liffId: "2010485669-4ZPXDW17"
-    });
+function sendForm() {
+  const eng = getValue("eng");
+  const engMeal = getValue("engMeal");
+  const bio = getValue("bio");
+  const social = getValue("social");
+  const bioMeal = getValue("bioMeal");
 
-    result.innerHTML += "<br>初始化成功";
-
-  } catch(err) {
-
-    result.innerHTML +=
-      "<br>錯誤：" +
-      err.message;
-
+  if (!eng || !engMeal || !bio || !social || !bioMeal) {
+    alert("請全部勾選完成後再送出");
+    return;
   }
 
-};
+  alert(
+    "已送出回覆\n\n" +
+    "6/24 英文加強：" + eng + "\n" +
+    "6/24 訂餐：" + engMeal + "\n" +
+    "6/25 生物加強：" + bio + "\n" +
+    "6/25 社會講座：" + social + "\n" +
+    "6/25 訂餐：" + bioMeal
+  );
+}
 </script>
 
 </body>
