@@ -33,6 +33,13 @@ label{
   margin:8px 0;
 }
 
+input[type=text]{
+  width:100%;
+  padding:10px;
+  font-size:18px;
+  box-sizing:border-box;
+}
+
 button{
   width:100%;
   padding:15px;
@@ -55,6 +62,17 @@ button{
 <h2>第三次段考週通知單</h2>
 
 <img src="schedule.png" class="notice">
+
+<div class="card">
+
+<h3>學生姓名</h3>
+
+<input
+  type="text"
+  id="student"
+  placeholder="請輸入學生姓名">
+
+</div>
 
 <div class="card">
 
@@ -134,15 +152,27 @@ function getValue(name){
 
 async function sendForm() {
 
+  const student =
+    document.getElementById("student").value.trim();
+
   const eng = getValue("eng");
   const engMeal = getValue("engMeal");
   const bio = getValue("bio");
   const social = getValue("social");
   const bioMeal = getValue("bioMeal");
 
-  if (!eng || !engMeal || !bio || !social || !bioMeal) {
-    alert("請全部勾選完成後再送出");
+  if (
+    !student ||
+    !eng ||
+    !engMeal ||
+    !bio ||
+    !social ||
+    !bioMeal
+  ) {
+
+    alert("請全部填寫完成後再送出");
     return;
+
   }
 
   let userId = "未知";
@@ -150,15 +180,21 @@ async function sendForm() {
   try {
 
     if (liff.isLoggedIn()) {
-      const profile = await liff.getProfile();
+
+      const profile =
+        await liff.getProfile();
+
       userId = profile.userId;
+
     }
 
   } catch(e) {}
 
   const url =
     "https://script.google.com/macros/s/AKfycbx8pZWzAp_b9a_ZsiqRU_d6AWtUbzDlFekKpR58kg1eZZxrgSEY1tWFGaNcP3PY73L4PA/exec" +
-    "?userId=" + encodeURIComponent(userId) +
+    "?action=save" +
+    "&userId=" + encodeURIComponent(userId) +
+    "&student=" + encodeURIComponent(student) +
     "&eng=" + encodeURIComponent(eng) +
     "&engMeal=" + encodeURIComponent(engMeal) +
     "&bio=" + encodeURIComponent(bio) +
@@ -167,7 +203,7 @@ async function sendForm() {
 
   window.open(url, "_blank");
 
-  alert("已送出，請確認試算表是否收到資料");
+  alert("送出成功");
 
 }
 
