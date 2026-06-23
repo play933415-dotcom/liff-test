@@ -9,7 +9,6 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
 <style>
-
 body{
   font-family: Arial,"Microsoft JhengHei";
   padding:15px;
@@ -48,7 +47,6 @@ button{
   margin-top:10px;
   color:#666;
 }
-
 </style>
 
 </head>
@@ -62,27 +60,13 @@ button{
 
 <h3>6/24（三）英文加強</h3>
 
-<label>
-<input type="radio" name="eng" value="參加">
-我願意參加
-</label>
-
-<label>
-<input type="radio" name="eng" value="不參加">
-我不參加
-</label>
+<label><input type="radio" name="eng" value="參加">我願意參加</label>
+<label><input type="radio" name="eng" value="不參加">我不參加</label>
 
 <h3>6/24（三）訂餐</h3>
 
-<label>
-<input type="radio" name="engMeal" value="訂餐">
-訂餐
-</label>
-
-<label>
-<input type="radio" name="engMeal" value="不訂餐">
-不訂餐
-</label>
+<label><input type="radio" name="engMeal" value="訂餐">訂餐</label>
+<label><input type="radio" name="engMeal" value="不訂餐">不訂餐</label>
 
 </div>
 
@@ -90,39 +74,18 @@ button{
 
 <h3>6/25（四）生物加強</h3>
 
-<label>
-<input type="radio" name="bio" value="參加">
-我願意參加
-</label>
-
-<label>
-<input type="radio" name="bio" value="不參加">
-我不參加
-</label>
+<label><input type="radio" name="bio" value="參加">我願意參加</label>
+<label><input type="radio" name="bio" value="不參加">我不參加</label>
 
 <h3>6/25（四）社會講座</h3>
 
-<label>
-<input type="radio" name="social" value="參加">
-我願意參加
-</label>
-
-<label>
-<input type="radio" name="social" value="不參加">
-我不參加
-</label>
+<label><input type="radio" name="social" value="參加">我願意參加</label>
+<label><input type="radio" name="social" value="不參加">我不參加</label>
 
 <h3>6/25（四）訂餐</h3>
 
-<label>
-<input type="radio" name="bioMeal" value="訂餐">
-訂餐
-</label>
-
-<label>
-<input type="radio" name="bioMeal" value="不訂餐">
-不訂餐
-</label>
+<label><input type="radio" name="bioMeal" value="訂餐">訂餐</label>
+<label><input type="radio" name="bioMeal" value="不訂餐">不訂餐</label>
 
 </div>
 
@@ -178,56 +141,33 @@ async function sendForm() {
   const bioMeal = getValue("bioMeal");
 
   if (!eng || !engMeal || !bio || !social || !bioMeal) {
-
     alert("請全部勾選完成後再送出");
     return;
-
   }
+
+  let userId = "未知";
 
   try {
 
-    let userId = "未知";
-
     if (liff.isLoggedIn()) {
-
-      const profile =
-        await liff.getProfile();
-
+      const profile = await liff.getProfile();
       userId = profile.userId;
-
     }
 
-    const response = await fetch(
-      "https://script.google.com/macros/s/AKfycbxyE-fQP4EE7BpYTCihYQEgnm6j-LSqpiUxgH-POJWybhGKmqDcuZGpcjM9aKiA1INJMQ/exec",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "text/plain;charset=utf-8"
-        },
-        body: JSON.stringify({
-          userId: userId,
-          eng: eng,
-          engMeal: engMeal,
-          bio: bio,
-          social: social,
-          bioMeal: bioMeal
-        })
-      }
-    );
+  } catch(e) {}
 
-    const text = await response.text();
+  const url =
+    "https://script.google.com/macros/s/AKfycbxyE-fQP4EE7BpYTCihYQEgnm6j-LSqpiUxgH-POJWybhGKmqDcuZGpcjM9aKiA1INJMQ/exec" +
+    "?userId=" + encodeURIComponent(userId) +
+    "&eng=" + encodeURIComponent(eng) +
+    "&engMeal=" + encodeURIComponent(engMeal) +
+    "&bio=" + encodeURIComponent(bio) +
+    "&social=" + encodeURIComponent(social) +
+    "&bioMeal=" + encodeURIComponent(bioMeal);
 
-    alert("伺服器回覆：" + text);
+  window.open(url, "_blank");
 
-  } catch (err) {
-
-    alert(
-      "送出失敗\n\n" +
-      "名稱：" + err.name +
-      "\n\n訊息：" + err.message
-    );
-
-  }
+  alert("已送出，請確認試算表是否收到資料");
 
 }
 
