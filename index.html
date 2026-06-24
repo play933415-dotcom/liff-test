@@ -50,13 +50,18 @@ button{
   color:white;
 }
 
+button:disabled{
+  background:#aaa;
+}
+
 #status{
   margin-top:10px;
   color:#666;
+  line-height:1.6;
 }
 </style>
-
 </head>
+
 <body>
 
 <h2>第三次段考週通知單</h2>
@@ -64,96 +69,126 @@ button{
 <img src="schedule.png" class="notice">
 
 <div class="card">
-
 <h3>學生姓名</h3>
-
-<input
-  type="text"
-  id="student"
-  placeholder="請輸入學生姓名">
-
+<input type="text" id="student" placeholder="第一次填寫請輸入學生姓名">
 </div>
 
 <div class="card">
-
 <h3>6/24（三）英文加強</h3>
-
 <label><input type="radio" name="eng" value="參加">我願意參加</label>
 <label><input type="radio" name="eng" value="不參加">我不參加</label>
 
 <h3>6/24（三）訂餐</h3>
-
 <label><input type="radio" name="engMeal" value="訂餐">訂餐</label>
 <label><input type="radio" name="engMeal" value="不訂餐">不訂餐</label>
-
 </div>
 
 <div class="card">
-
 <h3>6/25（四）生物加強</h3>
-
 <label><input type="radio" name="bio" value="參加">我願意參加</label>
 <label><input type="radio" name="bio" value="不參加">我不參加</label>
 
 <h3>6/25（四）社會講座</h3>
-
 <label><input type="radio" name="social" value="參加">我願意參加</label>
 <label><input type="radio" name="social" value="不參加">我不參加</label>
 
 <h3>6/25（四）訂餐</h3>
-
 <label><input type="radio" name="bioMeal" value="訂餐">訂餐</label>
 <label><input type="radio" name="bioMeal" value="不訂餐">不訂餐</label>
-
 </div>
 
-<button onclick="sendForm()">
-送出回覆
-</button>
+<button id="sendBtn" onclick="sendForm()">送出／修改回覆</button>
 
-<div id="status">
-LIFF初始化中...
-</div>
+<div id="status">LIFF初始化中...</div>
 
 <script>
-
 const LIFF_ID = "2010485669-4ZPXDW17";
+const API_URL = "https://script.google.com/macros/s/AKfycbx8pZWzAp_b9a_ZsiqRU_d6AWtUbzDlFekKpR58kg1eZZxrgSEY1tWFGaNcP3PY73L4PA/exec";
+
+let currentUserId = "未知";
 
 window.onload = async function(){
-
   try{
+    await liff.init({ liffId: LIFF_ID });
 
-    await liff.init({
-      liffId: LIFF_ID
-    });
+    if (liff.isLoggedIn()) {
+      const profile = await liff.getProfile();
+      currentUserId = profile.userId;
+    }
 
     document.getElementById("status").innerHTML =
-      "LIFF初始化成功";
+      "LIFF初始化成功，正在讀取舊資料...";
+
+    loadOldData();
 
   }catch(err){
-
     document.getElementById("status").innerHTML =
       "LIFF錯誤：" + err.message;
-
   }
-
 };
 
 function getValue(name){
-
-  const checked =
-    document.querySelector(
-      'input[name="' + name + '"]:checked'
-    );
-
+  const checked = document.querySelector('input[name="' + name + '"]:checked');
   return checked ? checked.value : "";
+}
 
+function setValue(name, value){
+  if (!value) return;
+  const option = document.querySelector(
+    'input[name="' + name + '"][value="' + value + '"]'
+  );
+  if (option) option.checked = true;
+}
+
+function lockForm(){
+  document.getElementById("student").disabled = true;
+  document.getElementById("sendBtn").disabled = true;
+
+  const inputs = document.querySelectorAll("input");
+  inputs.forEach(input => input.disabled = true);
+}
+
+async function loadOldData(){
+  const url =
+    API_URL +
+    "?action=get" +
+    "&userId=" + encodeURIComponent(currentUserId);
+
+  try{
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.found) {
+      document.getElementById("student").value = data.student || "";
+
+      setValue("eng", data.eng);
+      setValue("engMeal", data.engMeal);
+      setValue("bio", data.bio);
+      setValue("social", data.social);
+      setValue("bioMeal", data.bioMeal);
+
+      document.getElementById("status").innerHTML =
+        "已載入上次回覆，可於截止前修改。<br>" +
+        "最後更新：" + (data.updateTime || "");
+    } else {
+      document.getElementById("status").innerHTML =
+        "第一次填寫，請輸入學生姓名並完成勾選。";
+    }
+
+    if (!data.editable) {
+      document.getElementById("status").innerHTML +=
+        "<br>已超過修改時間，僅供查看。";
+      lockForm();
+    }
+
+  }catch(err){
+    document.getElementById("status").innerHTML =
+      "讀取舊資料失敗：" + err.message;
+  }
 }
 
 async function sendForm() {
-
-  const student =
-    document.getElementById("student").value.trim();
+  const student = document.getElementById("student").value.trim();
 
   const eng = getValue("eng");
   const engMeal = getValue("engMeal");
@@ -161,39 +196,15 @@ async function sendForm() {
   const social = getValue("social");
   const bioMeal = getValue("bioMeal");
 
-  if (
-    !student ||
-    !eng ||
-    !engMeal ||
-    !bio ||
-    !social ||
-    !bioMeal
-  ) {
-
+  if (!student || !eng || !engMeal || !bio || !social || !bioMeal) {
     alert("請全部填寫完成後再送出");
     return;
-
   }
 
-  let userId = "未知";
-
-  try {
-
-    if (liff.isLoggedIn()) {
-
-      const profile =
-        await liff.getProfile();
-
-      userId = profile.userId;
-
-    }
-
-  } catch(e) {}
-
   const url =
-    "https://script.google.com/macros/s/AKfycbx8pZWzAp_b9a_ZsiqRU_d6AWtUbzDlFekKpR58kg1eZZxrgSEY1tWFGaNcP3PY73L4PA/exec" +
+    API_URL +
     "?action=save" +
-    "&userId=" + encodeURIComponent(userId) +
+    "&userId=" + encodeURIComponent(currentUserId) +
     "&student=" + encodeURIComponent(student) +
     "&eng=" + encodeURIComponent(eng) +
     "&engMeal=" + encodeURIComponent(engMeal) +
@@ -203,10 +214,8 @@ async function sendForm() {
 
   window.open(url, "_blank");
 
-  alert("送出成功");
-
+  alert("已送出／更新，請重新開啟頁面確認內容。");
 }
-
 </script>
 
 </body>
