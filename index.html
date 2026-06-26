@@ -3,43 +3,38 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>國二加強回覆</title>
-
+<title>國二 6/27 加強課回覆</title>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
 <style>
 body{
-  font-family: Arial,"Microsoft JhengHei";
+  font-family: Arial,"Microsoft JhengHei",sans-serif;
   padding:15px;
   background:#f5f5f5;
 }
-
 .notice{
   width:100%;
   border:1px solid #ddd;
   margin-bottom:20px;
+  background:white;
 }
-
 .card{
   background:white;
   padding:15px;
   margin-bottom:15px;
   border-radius:10px;
 }
-
 label{
   display:block;
-  margin:8px 0;
+  margin:10px 0;
+  font-size:17px;
 }
-
 input[type=text]{
   width:100%;
   padding:10px;
   font-size:18px;
   box-sizing:border-box;
 }
-
 button{
   width:100%;
   padding:15px;
@@ -48,11 +43,18 @@ button{
   border-radius:10px;
   background:#06c755;
   color:white;
+  font-weight:bold;
 }
-
+button:disabled{
+  background:#999;
+}
 #status{
-  margin-top:10px;
-  color:#666;
+  margin-top:12px;
+  padding:10px;
+  color:#444;
+  line-height:1.6;
+  background:white;
+  border-radius:10px;
 }
 </style>
 </head>
@@ -64,29 +66,29 @@ button{
 <img src="schedule.png" class="notice">
 
 <div class="card">
-<h3>學生姓名</h3>
-<input type="text" id="student" placeholder="請輸入學生姓名">
+  <h3>學生姓名</h3>
+  <input type="text" id="student" placeholder="請輸入學生姓名">
 </div>
 
 <div class="card">
-<h3>6/27（六）09:00～10:30 社會加強</h3>
-<label><input type="radio" name="social" value="參加">我願意參加</label>
-<label><input type="radio" name="social" value="不參加">我不參加</label>
+  <h3>6/27（六）09:00～10:30 社會加強</h3>
+  <label><input type="radio" name="social" value="參加"> 我願意參加</label>
+  <label><input type="radio" name="social" value="不參加"> 我不參加</label>
 </div>
 
 <div class="card">
-<h3>6/27（六）10:30～12:00 理化加強</h3>
-<label><input type="radio" name="science" value="參加">我願意參加</label>
-<label><input type="radio" name="science" value="不參加">我不參加</label>
+  <h3>6/27（六）10:30～12:00 理化加強</h3>
+  <label><input type="radio" name="science" value="參加"> 我願意參加</label>
+  <label><input type="radio" name="science" value="不參加"> 我不參加</label>
 </div>
 
-<button onclick="sendForm()">送出回覆</button>
+<button id="sendBtn" onclick="sendForm()">送出／修改回覆</button>
 
 <div id="status">LIFF初始化中...</div>
 
 <script>
 const LIFF_ID = "2010485669-4ZPXDW17";
-const API_URL = "你的AppsScript網址";
+const API_URL = "https://script.google.com/macros/s/AKfycbx8pZWzAp_b9a_ZsiqRU_d6AWtUbzDlFekKpR58kg1eZZxrgSEY1tWFGaNcP3PY73L4PA/exec";
 
 let currentUserId = "未知";
 
@@ -99,7 +101,10 @@ window.onload = async function(){
       currentUserId = profile.userId;
     }
 
-    document.getElementById("status").innerHTML = "LIFF初始化成功";
+    document.getElementById("status").innerHTML =
+      "LIFF初始化成功，正在讀取上次回覆...";
+
+    await loadOldData();
 
   }catch(err){
     document.getElementById("status").innerHTML =
@@ -112,7 +117,72 @@ function getValue(name){
   return checked ? checked.value : "";
 }
 
-function sendForm() {
+function setValue(name, value){
+  if (!value) return;
+
+  const option = document.querySelector(
+    'input[name="' + name + '"][value="' + value + '"]'
+  );
+
+  if (option) {
+    option.checked = true;
+  }
+}
+
+function lockForm(){
+  document.getElementById("student").disabled = true;
+  document.getElementById("sendBtn").disabled = true;
+  document.getElementById("sendBtn").innerHTML = "已截止";
+
+  const inputs = document.querySelectorAll("input");
+  inputs.forEach(function(input){
+    input.disabled = true;
+  });
+}
+
+async function loadOldData(){
+  const url =
+    API_URL +
+    "?action=load" +
+    "&userId=" + encodeURIComponent(currentUserId);
+
+  try{
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.student) {
+      document.getElementById("student").value = data.student;
+    }
+
+    if (data.social) {
+      setValue("social", data.social);
+    }
+
+    if (data.science) {
+      setValue("science", data.science);
+    }
+
+    if (data.student || data.social || data.science) {
+      document.getElementById("status").innerHTML =
+        "已載入上次回覆，可於截止前修改。";
+    } else {
+      document.getElementById("status").innerHTML =
+        "第一次填寫，請輸入學生姓名並完成勾選。";
+    }
+
+    if (data.editable === false) {
+      document.getElementById("status").innerHTML +=
+        "<br>已超過修改時間，僅供查看。";
+      lockForm();
+    }
+
+  }catch(err){
+    document.getElementById("status").innerHTML =
+      "讀取上次回覆失敗：" + err.message;
+  }
+}
+
+function sendForm(){
   const student = document.getElementById("student").value.trim();
   const social = getValue("social");
   const science = getValue("science");
@@ -132,7 +202,8 @@ function sendForm() {
 
   window.open(url, "_blank");
 
-  alert("已送出／更新回覆");
+  document.getElementById("status").innerHTML =
+    "已送出／更新回覆。若跳出視窗顯示「新增成功」或「更新成功」，代表完成。";
 }
 </script>
 
